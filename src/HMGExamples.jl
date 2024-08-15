@@ -15,6 +15,12 @@
 
 module HMGExamples
 
-greet() = print("Hello World!")
+export Initializations, Games, HiddenGames, Schemes
+
+include("initializations.jl")
+include("games.jl")
+include("hidden_games.jl")
+include("schemes.jl")
+
 
 end # module HMGExamples
