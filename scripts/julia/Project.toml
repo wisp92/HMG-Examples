@@ -1,0 +1,4 @@
+[deps]
+Flux = "587475ba-b771-5e3f-ad9e-33799f191a9c"
+HMGExamples = "15f88598-ee4e-4961-97b3-e19c661069f4"
+StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
