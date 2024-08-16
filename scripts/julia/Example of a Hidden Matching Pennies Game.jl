@@ -19,7 +19,7 @@ using Flux
 
 using HMGExamples
 using HMGExamples.Initializations
-using HMGExamples.HiddenGames
+using HMGExamples.Games
 using HMGExamples.Schemes
 
 const zeros = HMGExamples.Initializations.zeros
@@ -33,7 +33,7 @@ function representation_map(dims; init=uniform, bias=zeros)
     next = iterate(dims, state)
     if isnothing(next) break end
     dim, state = next
-    push!(layers, Dense(prev_dim => dim, celu; init=init, bias=bias(dim)))
+    push!(layers, Dense(prev_dim => dim; init=init, bias=bias(dim)))
     prev_dim = dim
   end
   push!(layers, Dense(prev_dim => 1, sigmoid; init=init, bias=bias(1)))
@@ -44,10 +44,13 @@ end
 Random.seed!(0)
 
 (m₁, m₂) = S = (2, 2)
-χ₁ = representation_map([m₁, 2]; init=uniform(; low=0, high=1))
-χ₂ = representation_map([m₂, 2]; init=uniform(; low=0, high=1))
+χ₁ = representation_map([m₁, 1]; init=uniform(; low=-1, high=1))
+χ₂ = representation_map([m₂, 1]; init=uniform(; low=-1, high=1))
 
-g = HiddenMatchingPenniesGame{S}(χ₁, χ₂)
-θ₀ = @MVector [-2.0, 2.0, -3.0, 3.0]
-s = PreconditioningScheme(g, θ₀)
-collect(Iterators.take(s, 100))
+hg = L₂(MatchingPenniesGame(), 5e-2)
+bg = hide(hg, (χ₁, χ₂), S)
+θ₀ = @MVector [1.25, 2.25, 1.25, 2.25]
+s = PreconditioningScheme(bg, θ₀, 1e-2; abstol=0)
+θ = Iterators.take(s, 10000) |> collect
+x = [[χ₁(θₜ[begin:m₁]); χ₂(θₜ[m₁ + 1:m₁ + m₂])] for θₜ ∈ θ]
+
