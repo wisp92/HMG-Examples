@@ -31,7 +31,7 @@ function uniform(rng::AbstractRNG, dims...; low=0, high=1, eltype=Float64)
 end
 
 uniform(dims...; kwargs...) = 
-  uniform(default_rng(), dims..., kwargs...)
+  uniform(default_rng(), dims...; kwargs...)
 
 uniform(rng::AbstractRNG=default_rng(); kwargs...) = 
   (dims...) -> uniform(rng, dims...; kwargs...)
