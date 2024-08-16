@@ -15,12 +15,13 @@
 
 module Schemes
 
-import LinearAlgebra: pinv
-import StaticArrays: SVector, MVector, sacollect
-import Zygote: jacobian
-import ChainRulesCore: @non_differentiable
+import LinearAlgebra: I as IdentityMatrix, Diagonal, pinv, svd
+import StaticArrays: SVector, MVector, MMatrix
+import Zygote: pullback, withjacobian
 
-import ..HiddenGames: _AHG, payoff
+import ..Games: _AG, payoff
+import ..BaseGames: _BG
+
 import ..Initializations: zeros as _zeros
 
 
@@ -28,55 +29,85 @@ export AbstractScheme, PreconditioningScheme
 
 
 # DOCME
-abstract type AbstractScheme{M, G <: _AHG} end
+abstract type AbstractScheme{G <: _AG} end
 const _AS = AbstractScheme # alias
 
 # DOCME
 function Base.iterate(::_AS, θₜ₋₁) end
 function Base.iterate(::_AS) end
 
-Base.eltype(::Type{<: _AS{M}}) where {M} = MVector{M, Float64}
 Base.IteratorSize(::Type{<: _AS}) = Base.IsInfinite()
 
 
 # DOCME
-struct PreconditioningScheme{M, G} <: _AS{M, G}
+struct PreconditioningScheme{M, G} <: _AS{G}
   g::G
   θ₀::MVector{M, Float64}
-  γ::Float64
-  function PreconditioningScheme(g::G, θ₀, γ=1e-4) where {S, G <: _AHG{S}}
-    new{sum(S), G}(g, θ₀, γ)
+  γ
+  abstol
+  function PreconditioningScheme(g::G, θ₀, γ=1e-4; abstol=1e-4) where {S, G <: _AG{S}}
+    new{sum(S), G}(g, θ₀, γ, abstol)
   end
 end
 const _PS = PreconditioningScheme # alias
 
+function _P(∂χᵢ; abstol=1e-4)
+  F = svd(∂χᵢ)
+  S = Iterators.takewhile(>(abstol), F.S) |> collect
+  U = F.U[:, begin:length(S)]
+  U * Diagonal(pinv.(S) .^ 2) * U'
+end
 
 Base.iterate(s::_PS) = (s.θ₀, convert(SVector, s.θ₀))
-function Base.iterate(s::_PS{M, <: Any}, θₜ₋₁) where {M}
 
+# function Base.iterate(s::_PS{M, <: _BG}, θₜ₋₁::SVector{M, Float64}) where {M}
+#   bg_sz = size(s.g)
+#   hg_sz = size(s.g.g) 
+#   n = length(bg_sz)
+
+#   ∂χₜ₋₁ = Tuple(_zeros(mᵢ, dᵢ) for (mᵢ, dᵢ) ∈ zip(bg_sz, hg_sz))
+#   IM = MMatrix{n, n, Int}(IdentityMatrix)
+#   I = Iterators.Stateful(Base.OneTo(M))
+#   ∂buₜ₋₁ =  Tuple(begin
+#     _, ∂uᵢ = pullback(θ -> payoff(s.g, θ; ∂=Dict(χᵢ => ∂χᵢ)), θₜ₋₁)
+#     (∂uᵢ(IMᵢ) |> only)[Iterators.take(I, mᵢ) |> collect]
+#   end for (χᵢ, ∂χᵢ, mᵢ, IMᵢ) ∈ zip(s.g.χ, ∂χₜ₋₁, bg_sz, eachcol(IM)))
+
+#   ∂uₜ₋₁ = reduce(vcat, 
+#     _P(∂χᵢ; abstol=s.abstol) * ∂buᵢ
+#     for (∂χᵢ, ∂buᵢ) ∈ zip(∂χₜ₋₁, ∂buₜ₋₁)
+#   )
+
+#   θₜ = θₜ₋₁ + s.γ * ∂uₜ₋₁
+#   convert(MVector, θₜ), θₜ
+# end
+
+function Base.iterate(s::_PS{M, <: _BG}, θₜ₋₁::SVector{M, Float64}) where {M}
   bg_sz = size(s.g)
   hg_sz = size(s.g.g) 
   n = length(bg_sz)
 
-  ∂χ = sacollect(SVector{n}, _zeros(mᵢ, dᵢ) for (mᵢ, dᵢ) ∈ zip(bg_sz, hg_sz))
-  f = Tuple(∂θᵢ -> (∂χᵢ[:] = ∂θᵢ) for ∂χᵢ ∈ ∂χ)
-  payoff_f = θ -> payoff(s.g, θ; f=f)
-  ∂u = jacobian(payoff_f, θₜ₋₁) |> only
+  Θ = Iterators.Stateful(θₜ₋₁)
+  O = Tuple(
+    withjacobian(χᵢ, Iterators.take(Θ, mᵢ) |> collect) 
+    for (χᵢ, mᵢ) ∈ zip(s.g.χ, bg_sz)
+  )
+  ∂χₜ₋₁ = Tuple(Oᵢ.grad |> only for Oᵢ ∈ O)
 
-  V = MVector{<: Any, Float64}[]
-  sizehint!(V, n)
-  jᵢ₋₁ = 0
-  for (∂χᵢ, ∂uᵢ, mᵢ) ∈ zip(∂χ, eachrow(∂u), bg_sz)
-    jᵢ = jᵢ₋₁ + mᵢ
-    push!(V, pinv(∂χᵢ * ∂χᵢ') * ∂uᵢ[jᵢ₋₁ + 1:jᵢ])
-    jᵢ₋₁ = jᵢ
-  end
+  xₜ₋₁ = MVector{sum(hg_sz), Float64}(reduce(vcat, Oᵢ.val for Oᵢ ∈ O))
+  _, ∂hu = pullback(payoff, s.g.g, xₜ₋₁)
+  IM = MMatrix{n, n, Int}(IdentityMatrix)
+  I = Iterators.Stateful(Base.OneTo(sum(hg_sz)))
+  ∂uₜ₋₁ = reduce(vcat, begin 
+    (_, ∂huᵢ) = ∂hu(IMᵢ) 
+    pinv(∂χᵢ; atol=s.abstol) * ∂huᵢ[Iterators.take(I, dᵢ) |> collect]
+  end for (∂χᵢ, dᵢ, IMᵢ) ∈ zip(∂χₜ₋₁, hg_sz, eachcol(IM)))
 
-  θₜ = θₜ₋₁ + s.γ * reduce(vcat, V)
+  θₜ = θₜ₋₁ + s.γ * ∂uₜ₋₁
   convert(MVector, θₜ), θₜ
 end
 
-@non_differentiable iterate(::_PS, ::Any...)
+Base.eltype(::_PS{M, <: Any}) where {M} = MVector{M, Float64}
 
 
 end # module Schemes

@@ -15,12 +15,29 @@
 
 module HMGExamples
 
-export Initializations, Games, HiddenGames, Schemes
+
+export Initializations, Games, RegularizedGames, BaseGames, Schemes
+export L₂, hide
+
 
 include("initializations.jl")
+
 include("games.jl")
-include("hidden_games.jl")
+include("regularized_games.jl")
+include("base_games.jl")
+
 include("schemes.jl")
+
+
+import .Games: _AG
+import .RegularizedGames: L₂RegularizedGame
+import .BaseGames: BaseGame
+
+# DOCME
+L₂(g::_AG{S}, μ=1e-4; x₀=zeros(sum(S))) where {S} = L₂RegularizedGame(g, μ, x₀)
+
+# DOCME
+hide(g::_AG, χ, dims::Tuple{Vararg{Int}}) = BaseGame{dims}(g, χ)
 
 
 end # module HMGExamples

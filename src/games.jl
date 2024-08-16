@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 module Games
 
 import Zygote: @adjoint, pullback
@@ -46,8 +45,10 @@ end
 @adjoint function payoff(g::_MPG, x)
   payoff(g, x), function(∂x)
     _, ∂u₁ = pullback(_u₁, g, x)
-    ∂u₁₁_∂θ, ∂u₁₂_∂θ = Tuple(∂u₁ᵢ for (_, ∂u₁ᵢ) ∈ ∂u₁.(∂x))
-    ∂u = [∂u₁₁_∂θ[1], -∂u₁₂_∂θ[2]]
+    ∂x₁, ∂x₂ = ∂x
+    ∂u₁_∂θ₁ =  ∂u₁(∂x₁)[2][1]
+    ∂u₁_∂θ₂ =  ∂u₁(∂x₂)[2][2]
+    ∂u = @MVector [∂u₁_∂θ₁, -∂u₁_∂θ₂]
     (nothing, ∂u)
   end
 end
