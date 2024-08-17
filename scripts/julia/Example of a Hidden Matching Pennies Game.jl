@@ -17,11 +17,11 @@ using StaticArrays
 using Flux
 
 using HMGExamples
-using HMGExamples.Initializations
+using HMGExamples.Utilities
 using HMGExamples.Games
 using HMGExamples.Schemes
 
-const zeros = HMGExamples.Initializations.zeros
+const zeros = HMGExamples.Utilities.zeros
 
 
 function representation_map(dims; init=uniform, bias=zeros, activator=celu)

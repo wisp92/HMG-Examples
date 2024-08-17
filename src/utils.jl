@@ -12,14 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-module Initializations
+module Utilities
 
 import Random: AbstractRNG, default_rng
 import StaticArrays: @MArray
 import ChainRulesCore: @non_differentiable
 
 
-export uniform
+export uniform, zeros
 
 
 # DOCME
@@ -46,4 +46,4 @@ zeros(; kwargs...) = (dims...) -> zeros(dims...; kwargs...)
 @non_differentiable zeros(::Any...)
 
 
-end # module Initializations
+end # module Utilities

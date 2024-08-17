@@ -14,20 +14,12 @@
 
 module BaseGames
 
-import StaticArrays: MVector
 import Zygote: @adjoint, pullback, hook
-import Reexport: @reexport
 
-import ..Games: _AG, _MPG
-@reexport import ..Games: payoff
+import .._AG, .._ABG, ..payoff
 
 
-export AbstractBaseGame, BaseGame, latent_game
-
-
-# DOCME
-abstract type AbstractBaseGame{S, G <: _AG} <: _AG{S} end
-const _ABG = AbstractBaseGame # alias
+export BaseGame
 
 
 # DOCME
@@ -39,8 +31,6 @@ struct BaseGame{S, G} <: _ABG{S, G}
   end
 end
 const _BG = BaseGame # alias
-
-latent_game(g::_BG) = g.g
 
 function payoff(g::_BG{S, <: Any}, θ) where {S}
   I = Iterators.Stateful(Base.OneTo(sum(S)))
@@ -65,4 +55,4 @@ end
 end
 
 
-end # module HiddenGames
+end # module BaseGames

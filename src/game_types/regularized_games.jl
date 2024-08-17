@@ -14,23 +14,12 @@
 
 module RegularizedGames
 
-import StaticArrays: @MVector
 import Zygote: @adjoint, pullback
-import Reexport: @reexport
 
-import ..Games: _AG
-@reexport import ..Games: payoff
+import .._AG, .._ARG, ..payoff
 
 
-export AbstractRegularizedGame, L₂RegularizedGame
-
-
-# DOCME
-abstract type AbstractRegularizedGame{S, G <: _AG} <: _AG{S} end
-const _ARG = AbstractRegularizedGame # alias
-
-# DOCME
-function game(::_ARG) end
+export L₂RegularizedGame
 
 
 # DOCME
@@ -61,6 +50,7 @@ end
     (nothing, ∂u_∂x - reduce(vcat, ∂x .* ∂R))
   end
 end
+
 
 end # module RegularizedGames
 

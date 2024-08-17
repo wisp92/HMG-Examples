@@ -17,18 +17,10 @@ module Games
 import Zygote: @adjoint, pullback
 import StaticArrays: @MVector
 
+import .._AG, ..payoff
 
-export AbstractGame, MatchingPenniesGame, payoff
 
-
-# DOCME
-abstract type AbstractGame{S} end
-const _AG = AbstractGame # alias
-
-Base.size(::_AG{S}) where {S} = S
-
-# DOCME
-function payoff(::_AG, x) end
+export MatchingPenniesGame
 
 
 # DOCME 

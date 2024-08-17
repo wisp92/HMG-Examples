@@ -14,21 +14,22 @@
 
 module HMGExamples
 
-
-export Initializations, Games, RegularizedGames, BaseGames, Schemes
+export Utilities
+export AbstractGame, AbstractRegularizedGame, AbstractBaseGame, AbstractScheme, payoff
+export Games, RegularizedGames, BaseGames, Schemes
 export L₂, hide
 
 
-include("initializations.jl")
+include("utils.jl")
+include("interfaces.jl")
 
-include("games.jl")
-include("regularized_games.jl")
-include("base_games.jl")
+include("game_types/games.jl")
+include("game_types/regularized_games.jl")
+include("game_types/base_games.jl")
 
 include("schemes.jl")
 
 
-import .Games: _AG
 import .RegularizedGames: L₂RegularizedGame
 import .BaseGames: BaseGame
 

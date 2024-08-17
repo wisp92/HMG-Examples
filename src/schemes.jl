@@ -12,31 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 module Schemes
 
-import LinearAlgebra: I as IdentityMatrix, Diagonal, pinv, svd
+import LinearAlgebra: I as IdentityMatrix, pinv
 import StaticArrays: SVector, MVector, MMatrix
 import Zygote: pullback, withjacobian
 
-import ..Games: _AG, payoff
+import .._AG, ..payoff, .._AS
 import ..BaseGames: _BG
 
-import ..Initializations: zeros as _zeros
+import ..Utilities: zeros as _zeros
 
 
-export AbstractScheme, PreconditioningScheme
-
-
-# DOCME
-abstract type AbstractScheme{G <: _AG} end
-const _AS = AbstractScheme # alias
-
-# DOCME
-function Base.iterate(::_AS, θₜ₋₁) end
-function Base.iterate(::_AS) end
-
-Base.IteratorSize(::Type{<: _AS}) = Base.IsInfinite()
+export PreconditioningScheme
 
 
 # DOCME
@@ -51,36 +39,8 @@ struct PreconditioningScheme{M, G} <: _AS{G}
 end
 const _PS = PreconditioningScheme # alias
 
-function _P(∂χᵢ; abstol=1e-4)
-  F = svd(∂χᵢ)
-  S = Iterators.takewhile(>(abstol), F.S) |> collect
-  U = F.U[:, begin:length(S)]
-  U * Diagonal(pinv.(S) .^ 2) * U'
-end
-
 Base.iterate(s::_PS) = (s.θ₀, convert(SVector, s.θ₀))
 
-# function Base.iterate(s::_PS{M, <: _BG}, θₜ₋₁::SVector{M, Float64}) where {M}
-#   bg_sz = size(s.g)
-#   hg_sz = size(s.g.g) 
-#   n = length(bg_sz)
-
-#   ∂χₜ₋₁ = Tuple(_zeros(mᵢ, dᵢ) for (mᵢ, dᵢ) ∈ zip(bg_sz, hg_sz))
-#   IM = MMatrix{n, n, Int}(IdentityMatrix)
-#   I = Iterators.Stateful(Base.OneTo(M))
-#   ∂buₜ₋₁ =  Tuple(begin
-#     _, ∂uᵢ = pullback(θ -> payoff(s.g, θ; ∂=Dict(χᵢ => ∂χᵢ)), θₜ₋₁)
-#     (∂uᵢ(IMᵢ) |> only)[Iterators.take(I, mᵢ) |> collect]
-#   end for (χᵢ, ∂χᵢ, mᵢ, IMᵢ) ∈ zip(s.g.χ, ∂χₜ₋₁, bg_sz, eachcol(IM)))
-
-#   ∂uₜ₋₁ = reduce(vcat, 
-#     _P(∂χᵢ; abstol=s.abstol) * ∂buᵢ
-#     for (∂χᵢ, ∂buᵢ) ∈ zip(∂χₜ₋₁, ∂buₜ₋₁)
-#   )
-
-#   θₜ = θₜ₋₁ + s.γ * ∂uₜ₋₁
-#   convert(MVector, θₜ), θₜ
-# end
 
 function Base.iterate(s::_PS{M, <: _BG}, θₜ₋₁::SVector{M, Float64}) where {M}
   bg_sz = size(s.g)
