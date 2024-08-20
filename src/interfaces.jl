@@ -12,32 +12,51 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# DOCME
+"""
+    AbstractGame{S}
+
+Supertype for games of size `S`.
+"""
 abstract type AbstractGame{S} end
 const _AG = AbstractGame # alias
 
 Base.size(::_AG{S}) where {S} = S
 
-# DOCME
-function payoff(::_AG, x) end
+"""
+    payoff(g::AbstractGame, x)
+
+Compute the payoffs of `g` at the strategy profile `x`.
+"""
+function payoff(::_AG, ::Any) end
 
 
-# DOCME
+"""
+    AbstractRegularizedGame{S, G <: AbstractGame} <: AbstractGame{S}
+
+Supertype for regularized games of size `S` and type `G`.
+"""
 abstract type AbstractRegularizedGame{S, G <: _AG} <: _AG{S} end
 const _ARG = AbstractRegularizedGame # alias
 
 
-# DOCME
+"""
+    AbstractBaseGame{S, G <: AbstractGame} <: AbstractGame{S}
+
+Supertype for base games of size `S` with corresponding latent game of type `G`.
+"""
 abstract type AbstractBaseGame{S, G <: _AG} <: _AG{S} end
 const _ABG = AbstractBaseGame # alias
 
 
-# DOCME
-abstract type AbstractScheme{G <: _AG} end
-const _AS = AbstractScheme # alias
+"""
+    AbstractIterableScheme{G <: AbstractGame}
 
-# DOCME
-function Base.iterate(::_AS, θₜ₋₁) end
-function Base.iterate(::_AS) end
+Supertype for iterable schemes for games of type `G`.
+"""
+abstract type AbstractIterableScheme{G <: _AG} end
+const _AIS = AbstractIterableScheme # alias
 
-Base.IteratorSize(::Type{<: _AS}) = Base.IsInfinite()
+function Base.iterate(::_AIS, ::Any) end
+function Base.iterate(::_AIS) end
+
+Base.IteratorSize(::Type{<: _AIS}) = Base.IsInfinite()

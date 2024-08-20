@@ -15,9 +15,9 @@
 module HMGExamples
 
 export Utilities
-export AbstractGame, AbstractRegularizedGame, AbstractBaseGame, AbstractScheme, payoff
-export Games, RegularizedGames, BaseGames, Schemes
-export L₂, hide
+export AbstractGame, AbstractRegularizedGame, AbstractBaseGame, AbstractIterableScheme
+export Games, RegularizedGames, BaseGames, IterableSchemes
+export payoff, L₂, hide
 
 
 include("utils.jl")
@@ -27,17 +27,32 @@ include("game_types/games.jl")
 include("game_types/regularized_games.jl")
 include("game_types/base_games.jl")
 
-include("schemes.jl")
+include("iterable_schemes.jl")
 
 
 import .RegularizedGames: L₂RegularizedGame
 import .BaseGames: BaseGame
 
-# DOCME
+"""
+    L₂(g::AbstractGame[, μ]; <keyword arguments>)
+
+Return a version of `g` where the players' payoffs have been penalized, at weight `μ`, in accordance to the L₂-norm.
+
+See also: [`HMGExamples.RegularizedGames.L₂RegularizedGame`](@ref)
+
+# Arguments
+- `x₀ = zeros(sum(size(g)))`: Reference point from which distance is measured.
+"""
 L₂(g::_AG{S}, μ=1e-4; x₀=zeros(sum(S))) where {S} = L₂RegularizedGame(g, μ, x₀)
 
-# DOCME
-hide(g::_AG, χ, dims::Tuple{Vararg{Int}}) = BaseGame{dims}(g, χ)
+"""
+    hide(g::AbstractGame, χ, dims)
+
+Return a hidden version of `g` of size `dims` where the players' strategies are given as input to the representation maps `χ`. The collective outputs of `χ` represents a strategy profile for `g`.
+
+See also: [`HMGExamples.BaseGames.BaseGame`](@ref)
+"""
+hide(g::_AG, χ, dims) = BaseGame{dims}(g, χ)
 
 
 end # module HMGExamples

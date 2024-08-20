@@ -23,7 +23,25 @@ import .._AG, ..payoff
 export MatchingPenniesGame
 
 
-# DOCME 
+@doc raw"""
+    MatchingPenniesGame <: AbstractGame{(1, 1)}
+
+Game of Matching Pennies.
+
+The implementation differs from the typical one in that the game is realized in the strategy space ``X ≡ [0, 1]²``.
+
+Specifically, for each ``x = (x₁, x₂) ∈ X``, ``xᵢ`` is the probability with which player ``i`` plays their first strategy, and therefore the payoffs ``u₁(x)`` and ``u₂(x)`` of the players at ``x`` are given by the formulas:
+
+```math
+  u₁(x) = -u₂(x) = (2x₁ - 1) * (2x₂ - 1).
+```
+
+---
+
+    MatchingPenniesGame()
+
+Construct a game of Matching Pennies.
+"""
 struct MatchingPenniesGame <: _AG{(1, 1)} end
 const _MPG = MatchingPenniesGame # alias
 

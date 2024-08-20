@@ -19,7 +19,7 @@ using Flux
 using HMGExamples
 using HMGExamples.Utilities
 using HMGExamples.Games
-using HMGExamples.Schemes
+using HMGExamples.IterableSchemes
 
 const zeros = HMGExamples.Utilities.zeros
 
@@ -56,7 +56,7 @@ hg = L₂(MatchingPenniesGame(), 4e-2; x₀=fill(0.5, 2))
 bg = hide(hg, (χ₁, χ₂), S)
 # θ₀ = uniform(m₁ + m₂; low=-1, high=1)
 θ₀ = @MVector [1.25, 2.25]
-s = PreconditioningScheme(bg, θ₀, 1e-2; abstol=0)
+s = LatentGradientAscent(bg, θ₀, 1e-2)
 θ = Iterators.take(s, 40000) |> collect
 x = [[χ₁(θₜ[begin:m₁]); χ₂(θₜ[m₁ + 1:m₁ + m₂])] for θₜ ∈ θ]
 

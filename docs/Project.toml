@@ -1,0 +1,3 @@
+[deps]
+Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
+HMGExamples = "15f88598-ee4e-4961-97b3-e19c661069f4"
