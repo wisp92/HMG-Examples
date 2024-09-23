@@ -27,7 +27,7 @@ Base.size(::_AG{S}) where {S} = S
 
 Compute the payoffs of `g` at the strategy profile `x`.
 """
-function payoff(::_AG, ::Any) end
+payoff(::_AG, ::Any)
 
 
 """
@@ -56,7 +56,8 @@ Supertype for iterable schemes for games of type `G`.
 abstract type AbstractIterableScheme{G <: _AG} end
 const _AIS = AbstractIterableScheme # alias
 
-function Base.iterate(::_AIS, ::Any) end
-function Base.iterate(::_AIS) end
+# DOCME
+# Base.iterate(::_AIS, ::Any)
+# Base.iterate(::_AIS)
 
 Base.IteratorSize(::Type{<: _AIS}) = Base.IsInfinite()
